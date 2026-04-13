@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CACD · Revisão Espaçada</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0e0f;--surface:#16161a;--surface2:#1d1d23;--border:#272730;--accent:#c9a84c;--accent2:#7c6fa0;--text:#e2e0db;--muted:#5a5870;--green:#4a9e6b;--red:#b85555;--blue:#4a7fa5;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-weight:300;min-height:100vh;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(201,168,76,0.04) 0%,transparent 70%);}
+.wrap{max-width:820px;margin:0 auto;padding:0 20px;position:relative;z-index:1;}
+.hidden{display:none !important;}
+
+/* HOME */
+.home{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:40px 0;}
+.home-header{margin-bottom:60px;}
+.home-header h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:900;letter-spacing:-0.3px;}
+.home-header p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-top:6px;}
+.home-date{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;}
+.subject-grid{display:grid;gap:12px;}
+.subject-card{background:var(--surface);border:1px solid var(--border);display:grid;grid-template-columns:4px 1fr;cursor:pointer;transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;}
+.subject-card:hover,.subject-card:active{border-color:rgba(201,168,76,0.4);}
+.subject-card .bar-br{background:linear-gradient(180deg,#c9a84c,#7c6fa0);}
+.subject-card .bar-hm{background:linear-gradient(180deg,#7c6fa0,#4a7fa5);}
+.subject-inner{padding:24px 22px;}
+.subject-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px;}
+.subject-title{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:16px;}
+.subject-stats{display:flex;gap:16px;}
+.ss{display:flex;flex-direction:column;gap:2px;}
+.ss-v{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;}
+.ss-l{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.c-gold{color:var(--accent);}.c-red{color:var(--red);}.c-grn{color:var(--green);}.c-pur{color:var(--accent2);}
+.subject-arrow{font-family:'IBM Plex Mono',monospace;font-size:18px;color:var(--muted);margin-top:16px;}
+.sync-bar{display:flex;align-items:center;justify-content:space-between;margin-top:32px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);}
+.sync-info{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;}
+.sync-info span{color:var(--text);}
+.btn-sync{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);padding:6px 12px;cursor:pointer;letter-spacing:1px;}
+.btn-sync:hover{background:rgba(201,168,76,0.18);}
+.btn-sync:disabled{opacity:0.4;cursor:default;}
+
+/* MATERIA */
+.materia{display:none;padding-top:32px;}
+.materia.active{display:block;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;cursor:pointer;margin-bottom:28px;-webkit-tap-highlight-color:transparent;}
+.back-btn:hover{color:var(--text);}
+header.mat-header{padding:0 0 24px;border-bottom:1px solid var(--border);margin-bottom:32px;}
+.hd{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;}
+.hd-left h1{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;letter-spacing:-0.3px;}
+.hd-left p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-top:4px;}
+.hd-date .weekday{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;text-align:right;}
+.hd-date .date-str{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;text-align:right;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);margin-bottom:36px;}
+.stat{background:var(--surface);padding:12px 14px;}
+.stat-l{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px;}
+.stat-v{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;line-height:1;}
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.today-list{display:grid;gap:10px;margin-bottom:40px;}
+.card{background:var(--surface);border:1px solid var(--border);display:grid;grid-template-columns:3px 1fr;transition:border-color 0.15s;}
+.card:hover{border-color:rgba(201,168,76,0.3);}
+.card-bar{background:linear-gradient(180deg,var(--accent),var(--accent2));}
+.card-inner{padding:16px 20px;}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.card-num{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;}
+.card-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;letter-spacing:1px;}
+.pill-now{background:rgba(201,168,76,0.12);color:var(--accent);}
+.pill-done{background:rgba(74,158,107,0.10);color:var(--green);}
+.pill-late{background:rgba(184,85,85,0.10);color:var(--red);}
+.card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;line-height:1.15;margin-bottom:8px;}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;letter-spacing:1px;}
+.tag-mes{background:rgba(124,111,160,0.12);color:var(--accent2);}
+.tag-int{background:rgba(74,127,165,0.10);color:var(--blue);}
+.tag-rep{background:rgba(90,88,112,0.18);color:var(--muted);}
+.card-foot{display:flex;flex-direction:column;gap:8px;}
+.btn-docs{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);color:var(--accent);padding:11px 14px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;text-decoration:none;cursor:pointer;transition:all 0.15s;width:100%;}
+.btn-docs:hover{background:rgba(201,168,76,0.18);}
+.btn-docs.off{opacity:0.3;pointer-events:none;}
+.btn-rev{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(74,158,107,0.10);border:1px solid rgba(74,158,107,0.25);color:var(--green);padding:11px 16px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all 0.15s;width:100%;}
+.btn-rev:hover{background:rgba(74,158,107,0.20);}
+.done-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--green);background:rgba(74,158,107,0.08);border:1px solid rgba(74,158,107,0.15);padding:10px 14px;letter-spacing:1px;text-align:center;width:100%;}
+.info-bar{padding:10px 14px;margin-bottom:10px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;display:none;align-items:center;gap:8px;}
+.info-bar.show{display:flex;}
+.info-bar.green{background:rgba(74,158,107,0.06);border:1px solid rgba(74,158,107,0.2);color:var(--green);}
+.info-bar.red{background:rgba(184,85,85,0.06);border:1px solid rgba(184,85,85,0.2);color:var(--red);}
+.empty{background:var(--surface);border:1px solid var(--border);padding:40px 24px;text-align:center;margin-bottom:40px;}
+.empty-icon{font-size:26px;margin-bottom:12px;}
+.empty-title{font-family:'Playfair Display',serif;font-size:18px;margin-bottom:6px;}
+.empty-sub{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.tbl{border:1px solid var(--border);margin-bottom:40px;overflow:hidden;}
+.tbl-row{display:grid;grid-template-columns:24px 1fr 70px 50px;border-bottom:1px solid var(--border);align-items:center;}
+.tbl-row:last-child{border-bottom:none;}
+.tbl-row.hdr{background:var(--surface2);}
+.tbl-row:not(.hdr):hover{background:var(--surface2);}
+.tc{padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tc.hdr{font-size:8px;letter-spacing:2px;text-transform:uppercase;}
+.tc.name{color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:12px;}
+.s-hoje{color:var(--accent);}.s-atr{color:var(--red);}.s-feito{color:var(--green);}.s-futuro{color:var(--muted);}
+.cfg{background:var(--surface);border:1px solid var(--border);padding:22px;margin-bottom:40px;}
+.cfg h3{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;}
+.cfg-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:6px;margin-bottom:10px;}
+.cfg-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 11px;font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;margin-bottom:6px;}
+.cfg-input:focus{border-color:var(--accent);}
+.btn-save{background:rgba(201,168,76,0.10);border:1px solid rgba(201,168,76,0.25);color:var(--accent);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;margin-top:4px;transition:all 0.15s;width:100%;}
+.btn-save:hover{background:rgba(201,168,76,0.20);}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
+footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:flex;justify-content:space-between;letter-spacing:1px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HOME -->
+<div class="home" id="home">
+  <div class="home-header">
+    <h1>Revisão CACD</h1>
+    <p>Revisão Espaçada</p>
+    <div class="home-date" id="home-date">—</div>
+  </div>
+  <div class="subject-grid">
+    <div class="subject-card" onclick="openMateria('br')">
+      <div class="bar-br"></div>
+      <div class="subject-inner">
+        <div class="subject-label">Matéria 01</div>
+        <div class="subject-title">História do Brasil</div>
+        <div class="subject-stats">
+          <div class="ss"><div class="ss-v c-gold" id="home-br-hoje">—</div><div class="ss-l">Hoje</div></div>
+          <div class="ss"><div class="ss-v c-red"  id="home-br-atr">—</div><div class="ss-l">Atrasadas</div></div>
+          <div class="ss"><div class="ss-v c-pur"  id="home-br-total">—</div><div class="ss-l">Total</div></div>
+        </div>
+        <div class="subject-arrow">→</div>
+      </div>
+    </div>
+    <div class="subject-card" onclick="openMateria('hm')">
+      <div class="bar-hm"></div>
+      <div class="subject-inner">
+        <div class="subject-label">Matéria 02</div>
+        <div class="subject-title">História Mundial</div>
+        <div class="subject-stats">
+          <div class="ss"><div class="ss-v c-gold" id="home-hm-hoje">—</div><div class="ss-l">Hoje</div></div>
+          <div class="ss"><div class="ss-v c-red"  id="home-hm-atr">—</div><div class="ss-l">Atrasadas</div></div>
+          <div class="ss"><div class="ss-v c-pur"  id="home-hm-total">—</div><div class="ss-l">Total</div></div>
+        </div>
+        <div class="subject-arrow">→</div>
+      </div>
+    </div>
+  </div>
+  <div class="sync-bar">
+    <div class="sync-info">Sincronização: <span id="sync-status">—</span></div>
+    <button class="btn-sync" id="btn-sync-now" onclick="syncNow()">↻ Sincronizar</button>
+  </div>
+</div>
+
+<!-- HISTÓRIA DO BRASIL -->
+<div class="materia" id="mat-br">
+  <div class="back-btn" onclick="goHome()">← Voltar</div>
+  <header class="mat-header">
+    <div class="hd">
+      <div class="hd-left"><h1>História do Brasil</h1><p>Revisão Espaçada</p></div>
+      <div class="hd-date"><div class="weekday" id="br-weekday">—</div><div class="date-str" id="br-date">—</div></div>
+    </div>
+  </header>
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Para Hoje</div><div class="stat-v c-gold" id="br-s-hoje">—</div></div>
+    <div class="stat"><div class="stat-l">Atrasadas</div><div class="stat-v c-red" id="br-s-atr">—</div></div>
+    <div class="stat"><div class="stat-l">Feitas Hoje</div><div class="stat-v c-grn" id="br-s-feito">—</div></div>
+    <div class="stat"><div class="stat-l">Total</div><div class="stat-v c-pur" id="br-s-total">—</div></div>
+  </div>
+  <div class="sec-label">Revisões de Hoje</div>
+  <div class="info-bar green" id="br-info-bar"></div>
+  <div class="info-bar red" id="br-debt-bar"></div>
+  <div id="br-today-list" class="today-list"></div>
+  <div class="sec-label" style="margin-top:8px">Todos os Itens</div>
+  <div class="tbl" id="br-tbl">
+    <div class="tbl-row hdr"><div class="tc hdr">#</div><div class="tc hdr">Tema</div><div class="tc hdr">Próx.</div><div class="tc hdr">Reps.</div></div>
+  </div>
+  <div class="sec-label" style="margin-top:8px">Configuração</div>
+  <div class="cfg">
+    <h3>URL do Google Docs — Brasil</h3>
+    <input class="cfg-input" id="br-gdocs-url" type="url" placeholder="https://docs.google.com/document/d/SEU_ID/edit"/>
+    <div class="cfg-hint">Cole a URL do documento de História do Brasil.</div>
+    <button class="btn-save" onclick="saveConfig('br')">Salvar URL</button>
+  </div>
+  <footer><span>CACD · História do Brasil</span><span id="br-sync-footer">—</span></footer>
+</div>
+
+<!-- HISTÓRIA MUNDIAL -->
+<div class="materia" id="mat-hm">
+  <div class="back-btn" onclick="goHome()">← Voltar</div>
+  <header class="mat-header">
+    <div class="hd">
+      <div class="hd-left"><h1>História Mundial</h1><p>Revisão Espaçada</p></div>
+      <div class="hd-date"><div class="weekday" id="hm-weekday">—</div><div class="date-str" id="hm-date">—</div></div>
+    </div>
+  </header>
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Para Hoje</div><div class="stat-v c-gold" id="hm-s-hoje">—</div></div>
+    <div class="stat"><div class="stat-l">Atrasadas</div><div class="stat-v c-red" id="hm-s-atr">—</div></div>
+    <div class="stat"><div class="stat-l">Feitas Hoje</div><div class="stat-v c-grn" id="hm-s-feito">—</div></div>
+    <div class="stat"><div class="stat-l">Total</div><div class="stat-v c-pur" id="hm-s-total">—</div></div>
+  </div>
+  <div class="sec-label">Revisões de Hoje</div>
+  <div class="info-bar green" id="hm-info-bar"></div>
+  <div class="info-bar red" id="hm-debt-bar"></div>
+  <div id="hm-today-list" class="today-list"></div>
+  <div class="sec-label" style="margin-top:8px">Todos os Itens</div>
+  <div class="tbl" id="hm-tbl">
+    <div class="tbl-row hdr"><div class="tc hdr">#</div><div class="tc hdr">Tema</div><div class="tc hdr">Próx.</div><div class="tc hdr">Reps.</div></div>
+  </div>
+  <div class="sec-label" style="margin-top:8px">Configuração</div>
+  <div class="cfg">
+    <h3>URL do Google Docs — Mundial</h3>
+    <input class="cfg-input" id="hm-gdocs-url" type="url" placeholder="https://docs.google.com/document/d/SEU_ID/edit"/>
+    <div class="cfg-hint">Cole a URL do documento de História Mundial.</div>
+    <button class="btn-save" onclick="saveConfig('hm')">Salvar URL</button>
+  </div>
+  <footer><span>CACD · História Mundial</span><span id="hm-sync-footer">—</span></footer>
+</div>
+
+<!-- CONFIG GITHUB -->
+<div class="materia" id="mat-cfg">
+  <div class="back-btn" onclick="goHome()">← Voltar</div>
+  <header class="mat-header">
+    <div class="hd"><div class="hd-left"><h1>Configuração</h1><p>GitHub Sync</p></div></div>
+  </header>
+  <div class="cfg">
+    <h3>GitHub — Sincronização de Progresso</h3>
+    <input class="cfg-input" id="gh-token" type="password" placeholder="ghp_seu_token_aqui"/>
+    <div class="cfg-hint">Personal Access Token com permissão <strong>repo</strong>. Salvo apenas neste dispositivo.</div>
+    <input class="cfg-input" id="gh-user" type="text" placeholder="seu-usuario-github"/>
+    <div class="cfg-hint">Seu nome de usuário do GitHub.</div>
+    <input class="cfg-input" id="gh-repo" type="text" placeholder="revisao-cacd"/>
+    <div class="cfg-hint">Nome do repositório onde o site está hospedado.</div>
+    <button class="btn-save" onclick="saveGithubConfig()">Salvar e Testar Conexão</button>
+  </div>
+  <footer><span>CACD · Configuração</span><span>Token salvo apenas localmente</span></footer>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── DADOS ──────────────────────────────────────────────────────────────────
+const ITEMS_BR = [
+  {id:1,  tema:"BRASIL COLONIAL I",       mes:"JANEIRO",   bm:"_utu4mdqqtcdm"},
+  {id:2,  tema:"BRASIL COLONIAL II",      mes:"JANEIRO",   bm:"_k312j3nxxlvr"},
+  {id:3,  tema:"BRASIL COLONIAL III",     mes:"JANEIRO",   bm:"_nfpiybb777av"},
+  {id:4,  tema:"1° REINADO I",            mes:"JANEIRO",   bm:"_hi1rxpgccbwa"},
+  {id:5,  tema:"A REGÊNCIA 1831-1840 I",  mes:"JANEIRO",   bm:"_btmdy4w7uo5e"},
+  {id:6,  tema:"O 2° REINADO I",          mes:"FEVEREIRO", bm:"_671euced3lai"},
+  {id:7,  tema:"O 2° REINADO II",         mes:"FEVEREIRO", bm:"_g56ezg3qlwyr"},
+  {id:8,  tema:"O 2° REINADO III",        mes:"FEVEREIRO", bm:"_k443q475iy6n"},
+  {id:9,  tema:"O 2° REINADO IV",         mes:"FEVEREIRO", bm:"_wpu1c3uxli88"},
+  {id:10, tema:"CICLO 7 I",               mes:"FEVEREIRO", bm:"_bqm79kq7w2cl"},
+  {id:11, tema:"CICLO 8 I",               mes:"FEVEREIRO", bm:"_fgxr76bxxb8n"},
+  {id:12, tema:"CICLO 8 II",              mes:"FEVEREIRO", bm:"_atozsanlkkyf"},
+  {id:13, tema:"CICLO 9 I",               mes:"MARÇO",     bm:"_9nyabq4yxd0v"},
+  {id:14, tema:"CICLO 9 II",              mes:"MARÇO",     bm:"_f38gc8hjnp64"},
+  {id:15, tema:"CICLO 10 I",              mes:"MARÇO",     bm:"_3xczh2nn7f0"},
+  {id:16, tema:"CICLO 10 II",             mes:"MARÇO",     bm:"_a0udoghz17g6"},
+  {id:17, tema:"CICLO 10 III",            mes:"MARÇO",     bm:"_jc70ey3po40b"},
+  {id:18, tema:"CICLO 11 I",              mes:"MARÇO",     bm:"_3r5fknmu0ywk"},
+  {id:19, tema:"CICLO 11 II",             mes:"MARÇO",     bm:"_a56gigsavse8"},
+  {id:20, tema:"CICLO 12 I",              mes:"ABRIL",     bm:"kix.xfgt49cvhdyr"},
+  {id:21, tema:"CICLO 12 II",             mes:"ABRIL",     bm:"kix.vdnj956xsctw"},
+  {id:22, tema:"CICLO 13 I",              mes:"ABRIL",     bm:"kix.no1h86a4kdla"},
+];
+
+const ITEMS_HM = [
+  {id:1,  tema:"REVS BURGUESAS I",        mes:"JANEIRO",   bm:"_7mxlp9v2ybfl"},
+  {id:2,  tema:"CARAC DAS REVS I",        mes:"JANEIRO",   bm:"_aown8ddvr84d"},
+  {id:3,  tema:"CICLO 4 I",               mes:"FEVEREIRO", bm:"_8pj195v027fe"},
+  {id:4,  tema:"CICLO 4 II",              mes:"FEVEREIRO", bm:"_k37uoseeq6vp"},
+  {id:5,  tema:"CICLO 5 I",               mes:"FEVEREIRO", bm:"_oyqnc5agljcc"},
+  {id:6,  tema:"CICLO 6 I",               mes:"FEVEREIRO", bm:"_84y40cf62qob"},
+  {id:7,  tema:"CICLO 7 I",               mes:"MARÇO",     bm:"_ijizyy8dya93"},
+  {id:8,  tema:"CICLO 7 II",              mes:"MARÇO",     bm:"_b1da1qren6rm"},
+  {id:9,  tema:"CICLO 8 I",               mes:"JANEIRO",   bm:"_nt26sn40jyku"},
+  {id:10, tema:"CICLO 8 II",              mes:"JANEIRO",   bm:"_ym25shnudscy"},
+  {id:11, tema:"CICLO 8 III",             mes:"JANEIRO",   bm:"_s4n500izkere"},
+  {id:12, tema:"CICLO 9 I",               mes:"MARÇO",     bm:"kix.80qwq7k0rtq2"},
+  {id:13, tema:"CICLO 9 II",              mes:"MARÇO",     bm:"kix.x7xek4h7f9sa"},
+  {id:14, tema:"CICLO 9 III",             mes:"MARÇO",     bm:"_kf73obk8nd11"},
+  {id:15, tema:"CICLO 10 I",              mes:"FEVEREIRO", bm:"_dz4l3gblpta2"},
+  {id:16, tema:"CICLO 10 II",             mes:"FEVEREIRO", bm:"_40rflk8fax6f"},
+  {id:17, tema:"CICLO 11 I",              mes:"ABRIL",     bm:"kix.adrgp6jubfle"},
+];
+
+const INTERVALS_BY_MES = {
+  JANEIRO:   [7, 14, 21, 30, 45, 60],
+  FEVEREIRO: [4, 7,  14, 21, 30, 45],
+  MARÇO:     [2, 4,  7,  14, 21, 30],
+  ABRIL:     [1, 2,  4,  7,  14, 21],
+};
+function nextInterval(mes, rep) {
+  const seq = INTERVALS_BY_MES[mes] || INTERVALS_BY_MES["ABRIL"];
+  return seq[Math.min(rep, seq.length - 1)];
+}
+const INIT_REPS = {JANEIRO:0, FEVEREIRO:0, MARÇO:0, ABRIL:0};
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+const todayStr = () => new Date().toISOString().slice(0,10);
+function addDays(str, n) {
+  const d = new Date(str + "T12:00:00");
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(str) {
+  if (!str) return "—";
+  return new Date(str + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+}
+function buildLink(bm, url) {
+  if (!url || !bm) return null;
+  const base = url.split('#')[0].replace(/\?.*$/,'');
+  if (bm.startsWith('kix.')) return base + "#bookmark=" + bm;
+  return base + "#heading=h." + bm;
+}
+
+// ── GITHUB SYNC ────────────────────────────────────────────────────────────
+const GH_KEY = "cacd_github_cfg";
+const PROGRESS_FILE = "progresso.json";
+
+function getGHConfig() {
+  try { return JSON.parse(localStorage.getItem(GH_KEY)) || {}; } catch(e) { return {}; }
+}
+
+function ghApiUrl(cfg) {
+  return `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents/${PROGRESS_FILE}`;
+}
+
+async function loadFromGithub() {
+  const cfg = getGHConfig();
+  if (!cfg.token || !cfg.user || !cfg.repo) return null;
+  try {
+    const res = await fetch(ghApiUrl(cfg), {
+      headers: {
+        "Authorization": `token ${cfg.token}`,
+        "Accept": "application/vnd.github.v3+json"
+      }
+    });
+    if (res.status === 404) return null; // arquivo ainda não existe
+    if (!res.ok) throw new Error("Erro " + res.status);
+    const data = await res.json();
+    const content = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    content._sha = data.sha;
+    return content;
+  } catch(e) {
+    console.error("GitHub load error:", e);
+    return null;
+  }
+}
+
+async function saveToGithub(payload) {
+  const cfg = getGHConfig();
+  if (!cfg.token || !cfg.user || !cfg.repo) return false;
+  try {
+    // get current sha if exists
+    let sha = payload._sha;
+    if (!sha) {
+      const check = await fetch(ghApiUrl(cfg), {
+        headers: {"Authorization": `token ${cfg.token}`, "Accept": "application/vnd.github.v3+json"}
+      });
+      if (check.ok) { const d = await check.json(); sha = d.sha; }
+    }
+    const clean = {...payload}; delete clean._sha;
+    const body = {
+      message: "Progresso atualizado - " + todayStr(),
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(clean, null, 2)))),
+    };
+    if (sha) body.sha = sha;
+    const res = await fetch(ghApiUrl(cfg), {
+      method: "PUT",
+      headers: {
+        "Authorization": `token ${cfg.token}`,
+        "Accept": "application/vnd.github.v3+json",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error("Erro " + res.status);
+    const resp = await res.json();
+    // update sha locally
+    const all = getAllProgress();
+    all._sha = resp.content.sha;
+    localStorage.setItem("cacd_progress_sha", resp.content.sha);
+    return true;
+  } catch(e) {
+    console.error("GitHub save error:", e);
+    return false;
+  }
+}
+
+// ── STORAGE ────────────────────────────────────────────────────────────────
+const KEY_BR = "cacd_br_v5";
+const KEY_HM = "cacd_hm_v5";
+
+function persist(key, s) { localStorage.setItem(key, JSON.stringify(s)); }
+
+function getAllProgress() {
+  return {
+    br: JSON.parse(localStorage.getItem(KEY_BR) || "null"),
+    hm: JSON.parse(localStorage.getItem(KEY_HM) || "null"),
+    brUrl: localStorage.getItem("cacd_url_br") || "",
+    hmUrl: localStorage.getItem("cacd_url_hm") || "",
+    _sha: localStorage.getItem("cacd_progress_sha") || null,
+  };
+}
+
+function applyProgress(data) {
+  if (data.br) localStorage.setItem(KEY_BR, JSON.stringify(data.br));
+  if (data.hm) localStorage.setItem(KEY_HM, JSON.stringify(data.hm));
+  if (data.brUrl) localStorage.setItem("cacd_url_br", data.brUrl);
+  if (data.hmUrl) localStorage.setItem("cacd_url_hm", data.hmUrl);
+  if (data._sha) localStorage.setItem("cacd_progress_sha", data._sha);
+}
+
+function loadState(key, items) {
+  let s;
+  try { const r = localStorage.getItem(key); if (r) s = JSON.parse(r); } catch(e) {}
+  if (!s) {
+    const today = todayStr();
+    const cards = {};
+    const order = ["ABRIL","MARÇO","FEVEREIRO","JANEIRO"];
+    let slot = 0;
+    order.forEach(mes => {
+      items.filter(i => i.mes === mes).forEach(item => {
+        cards[item.id] = {
+          rep: INIT_REPS[item.mes] ?? 0,
+          nextReview: addDays(today, Math.floor(slot / 2)),
+          lastReview: null,
+        };
+        slot++;
+      });
+    });
+    s = {cards, doneToday:[], doneTodayDate: today};
+    persist(key, s);
+  }
+  if (s.doneTodayDate !== todayStr()) {
+    s.doneToday = [];
+    s.doneTodayDate = todayStr();
+    persist(key, s);
+  }
+  s.doneToday = (s.doneToday || []).map(Number);
+  return s;
+}
+
+// ── ESTADO GLOBAL ──────────────────────────────────────────────────────────
+let S_BR, S_HM;
+function getState(mat) { return mat === 'br' ? S_BR : S_HM; }
+function getKey(mat)   { return mat === 'br' ? KEY_BR : KEY_HM; }
+function getItems(mat) { return mat === 'br' ? ITEMS_BR : ITEMS_HM; }
+
+function initAll() {
+  S_BR = loadState(KEY_BR, ITEMS_BR);
+  S_HM = loadState(KEY_HM, ITEMS_HM);
+}
+
+// ── SYNC ───────────────────────────────────────────────────────────────────
+let lastSyncTime = localStorage.getItem("cacd_last_sync") || null;
+
+function updateSyncStatus(status) {
+  const el = document.getElementById("sync-status");
+  if (el) el.textContent = status;
+  ["br","hm"].forEach(m => {
+    const f = document.getElementById(`${m}-sync-footer`);
+    if (f) f.textContent = status;
+  });
+}
+
+async function syncNow() {
+  const cfg = getGHConfig();
+  if (!cfg.token) {
+    openConfig();
+    showToast("Configure o GitHub primeiro.");
+    return;
+  }
+  const btn = document.getElementById("btn-sync-now");
+  btn.disabled = true;
+  btn.textContent = "↻ Sincronizando...";
+  updateSyncStatus("Sincronizando...");
+
+  try {
+    // Pull primeiro
+    const remote = await loadFromGithub();
+    if (remote) {
+      // Merge: usar o mais recente por doneTodayDate e lastReview
+      const localBR = JSON.parse(localStorage.getItem(KEY_BR) || "null");
+      const localHM = JSON.parse(localStorage.getItem(KEY_HM) || "null");
+      
+      // Se remoto é mais recente, aplica
+      if (remote.br && (!localBR || remote.br.doneTodayDate >= (localBR.doneTodayDate||""))) {
+        localStorage.setItem(KEY_BR, JSON.stringify(remote.br));
+      }
+      if (remote.hm && (!localHM || remote.hm.doneTodayDate >= (localHM.doneTodayDate||""))) {
+        localStorage.setItem(KEY_HM, JSON.stringify(remote.hm));
+      }
+      if (remote.brUrl) localStorage.setItem("cacd_url_br", remote.brUrl);
+      if (remote.hmUrl) localStorage.setItem("cacd_url_hm", remote.hmUrl);
+      if (remote._sha) localStorage.setItem("cacd_progress_sha", remote._sha);
+    }
+
+    // Push progresso local
+    const payload = getAllProgress();
+    const ok = await saveToGithub(payload);
+
+    const now = new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+    if (ok) {
+      lastSyncTime = now;
+      localStorage.setItem("cacd_last_sync", now);
+      updateSyncStatus("✓ " + now);
+      showToast("Progresso sincronizado.");
+    } else {
+      updateSyncStatus("Erro ao sincronizar");
+      showToast("Erro ao sincronizar. Verifique o token.");
+    }
+  } catch(e) {
+    updateSyncStatus("Erro ao sincronizar");
+    showToast("Erro ao sincronizar.");
+  }
+
+  btn.disabled = false;
+  btn.textContent = "↻ Sincronizar";
+  initAll();
+  renderHome();
+}
+
+async function saveGithubConfig() {
+  const token = document.getElementById("gh-token").value.trim();
+  const user  = document.getElementById("gh-user").value.trim();
+  const repo  = document.getElementById("gh-repo").value.trim();
+  if (!token || !user || !repo) { showToast("Preencha todos os campos."); return; }
+  localStorage.setItem(GH_KEY, JSON.stringify({token, user, repo}));
+  showToast("Testando conexão...");
+  try {
+    const res = await fetch(`https://api.github.com/repos/${user}/${repo}`, {
+      headers: {"Authorization": `token ${token}`, "Accept": "application/vnd.github.v3+json"}
+    });
+    if (res.ok) {
+      showToast("✓ Conexão OK. Sincronizando...");
+      goHome();
+      setTimeout(syncNow, 500);
+    } else {
+      showToast("Erro: token ou repositório inválido.");
+    }
+  } catch(e) {
+    showToast("Erro de conexão.");
+  }
+}
+
+// ── NAVEGAÇÃO ──────────────────────────────────────────────────────────────
+function openMateria(mat) {
+  document.getElementById('home').classList.add('hidden');
+  document.querySelectorAll('.materia').forEach(el => el.classList.remove('active'));
+  document.getElementById('mat-' + mat).classList.add('active');
+  renderMateria(mat);
+}
+function openConfig() {
+  document.getElementById('home').classList.add('hidden');
+  document.querySelectorAll('.materia').forEach(el => el.classList.remove('active'));
+  document.getElementById('mat-cfg').classList.add('active');
+  const cfg = getGHConfig();
+  if (cfg.user) document.getElementById("gh-user").value = cfg.user;
+  if (cfg.repo) document.getElementById("gh-repo").value = cfg.repo;
+}
+function goHome() {
+  document.getElementById('home').classList.remove('hidden');
+  document.querySelectorAll('.materia').forEach(el => el.classList.remove('active'));
+  initAll();
+  renderHome();
+}
+
+// ── RENDER HOME ────────────────────────────────────────────────────────────
+function renderHome() {
+  const today = todayStr();
+  const dObj = new Date(today + "T12:00:00");
+  document.getElementById('home-date').textContent =
+    dObj.toLocaleDateString("pt-BR", {weekday:"long", day:"numeric", month:"long"});
+
+  ['br','hm'].forEach(mat => {
+    const s = getState(mat);
+    const items = getItems(mat);
+    const done = s.doneToday || [];
+    const due = items.filter(i => s.cards[i.id].nextReview <= today);
+    const pendentes = due.filter(i => !done.includes(i.id));
+    const overdue = pendentes.filter(i => s.cards[i.id].nextReview < today).length;
+    document.getElementById(`home-${mat}-hoje`).textContent = pendentes.length;
+    document.getElementById(`home-${mat}-atr`).textContent  = overdue;
+    document.getElementById(`home-${mat}-total`).textContent = items.length;
+  });
+
+  const cfg = getGHConfig();
+  const syncTxt = cfg.token ? (lastSyncTime ? "✓ " + lastSyncTime : "Nunca sincronizado") : "Não configurado — clique aqui";
+  updateSyncStatus(syncTxt);
+
+  // clique na sync bar para abrir config se não configurado
+  const syncBar = document.querySelector(".sync-bar");
+  if (syncBar) {
+    syncBar.onclick = cfg.token ? null : openConfig;
+    syncBar.style.cursor = cfg.token ? "default" : "pointer";
+  }
+}
+
+// ── RENDER MATERIA ─────────────────────────────────────────────────────────
+function renderMateria(mat) {
+  const s = getState(mat);
+  const items = getItems(mat);
+  const today = todayStr();
+  const url = localStorage.getItem(`cacd_url_${mat}`) || "";
+  const done = s.doneToday || [];
+
+  const dObj = new Date(today + "T12:00:00");
+  document.getElementById(`${mat}-weekday`).textContent =
+    dObj.toLocaleDateString("pt-BR", {weekday:"long"}).toUpperCase();
+  document.getElementById(`${mat}-date`).textContent =
+    dObj.toLocaleDateString("pt-BR", {day:"numeric", month:"long"});
+
+  const due = items
+    .filter(i => s.cards[i.id].nextReview <= today)
+    .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
+
+  const pendentes  = due.filter(i => !done.includes(i.id));
+  const feitosHoje = due.filter(i =>  done.includes(i.id));
+  const overdue    = pendentes.filter(i => s.cards[i.id].nextReview < today).length;
+
+  document.getElementById(`${mat}-s-hoje`).textContent  = pendentes.length;
+  document.getElementById(`${mat}-s-atr`).textContent   = overdue;
+  document.getElementById(`${mat}-s-feito`).textContent = done.length;
+  document.getElementById(`${mat}-s-total`).textContent = items.length;
+
+  // Info bar — progresso do dia
+  const infoBar = document.getElementById(`${mat}-info-bar`);
+  if (done.length >= 2) {
+    infoBar.textContent = `✓ ${done.length} revisão(ões) feita(s) hoje — mínimo diário atingido`;
+    infoBar.classList.add('show');
+  } else {
+    infoBar.classList.remove('show');
+  }
+
+  // Debt bar — itens atrasados
+  const debtBar = document.getElementById(`${mat}-debt-bar`);
+  if (overdue > 0) {
+    const dias = Math.ceil(overdue / 2);
+    debtBar.textContent = `⚠ ${overdue} item(s) atrasado(s) — estimativa de ${dias} dia(s) para quitar`;
+    debtBar.classList.add('show');
+  } else {
+    debtBar.classList.remove('show');
+  }
+
+  const container = document.getElementById(`${mat}-today-list`);
+  container.innerHTML = "";
+
+  if (pendentes.length === 0 && feitosHoje.length === 0) {
+    const next = items
+      .filter(i => s.cards[i.id].nextReview > today)
+      .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview))[0];
+    const nextTxt = next
+      ? `Próxima: ${next.tema} · ${fmtDate(s.cards[next.id].nextReview)}`
+      : "Sem revisões futuras agendadas.";
+    container.innerHTML = `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">Nenhuma revisão pendente hoje</div><div class="empty-sub">${nextTxt}</div></div>`;
+  } else {
+    feitosHoje.forEach(item => container.appendChild(buildCard(item, "done", url, mat)));
+    pendentes.forEach(item => {
+      const status = s.cards[item.id].nextReview < today ? "late" : "now";
+      container.appendChild(buildCard(item, status, url, mat));
+    });
+  }
+
+  document.getElementById(`${mat}-gdocs-url`).value = url;
+  renderTable(mat, today, done);
+
+  const cfg = getGHConfig();
+  const footer = document.getElementById(`${mat}-sync-footer`);
+  if (footer) footer.textContent = cfg.token ? (lastSyncTime ? "Sync: " + lastSyncTime : "Não sincronizado") : "GitHub não configurado";
+}
+
+function buildCard(item, status, url, mat) {
+  const s = getState(mat);
+  const card = s.cards[item.id];
+  const link = buildLink(item.bm, url);
+  const interval = nextInterval(item.mes, card.rep);
+  const pillMap = {
+    done: ["pill-done","✓ Revisado hoje"],
+    now:  ["pill-now", "Revisar hoje"],
+    late: ["pill-late","Atrasado"],
+  };
+  const [pillCls, pillTxt] = pillMap[status];
+  let docsBtn;
+  if (link) {
+    docsBtn = `<a class="btn-docs" href="${link}" target="_blank">↗ Abrir no Google Docs</a>`;
+  } else if (item.bm) {
+    docsBtn = `<span class="btn-docs off">↗ Configure a URL acima</span>`;
+  } else {
+    docsBtn = `<span class="btn-docs off">↗ Sem bookmark</span>`;
+  }
+  const actionBtn = status === "done"
+    ? `<span class="done-badge">✓ Revisado · próxima em ${fmtDate(card.nextReview)}</span>`
+    : `<button class="btn-rev" onclick="marcarRevisado('${mat}',${item.id})">Marcar como Revisado ✓</button>`;
+  const el = document.createElement("div");
+  el.className = "card";
+  el.innerHTML = `
+    <div class="card-bar"></div>
+    <div class="card-inner">
+      <div class="card-top">
+        <span class="card-num">ITEM · ${String(item.id).padStart(2,"0")}</span>
+        <span class="card-pill ${pillCls}">${pillTxt}</span>
+      </div>
+      <div class="card-title">${item.tema}</div>
+      <div class="card-tags">
+        <span class="tag tag-mes">${item.mes}</span>
+        <span class="tag tag-int">próx. ${interval}d</span>
+        <span class="tag tag-rep">${card.rep} rev.</span>
+      </div>
+      <div class="card-foot">${docsBtn}${actionBtn}</div>
+    </div>`;
+  return el;
+}
+
+function renderTable(mat, today, done) {
+  const tbl = document.getElementById(`${mat}-tbl`);
+  while (tbl.children.length > 1) tbl.removeChild(tbl.lastChild);
+  const s = getState(mat);
+  getItems(mat).forEach(item => {
+    const card = s.cards[item.id];
+    let cls = "s-futuro", label = fmtDate(card.nextReview);
+    if (done.includes(item.id))         { cls = "s-feito"; label = "✓"; }
+    else if (card.nextReview < today)   { cls = "s-atr"; }
+    else if (card.nextReview === today) { cls = "s-hoje"; label = "HOJE"; }
+    const row = document.createElement("div");
+    row.className = "tbl-row";
+    row.innerHTML = `
+      <div class="tc">${item.id}</div>
+      <div class="tc name">${item.tema}</div>
+      <div class="tc ${cls}">${label}</div>
+      <div class="tc">${card.rep}</div>`;
+    tbl.appendChild(row);
+  });
+}
+
+// ── AÇÕES ──────────────────────────────────────────────────────────────────
+async function marcarRevisado(mat, itemId) {
+  const s = getState(mat);
+  itemId = Number(itemId);
+  const done = (s.doneToday || []).map(Number);
+  if (done.includes(itemId)) return;
+  if (done.length === 2) showToast("Mínimo diário atingido — pode continuar se quiser.");
+  const item = getItems(mat).find(i => i.id === itemId);
+  const card = s.cards[itemId];
+  const newRep = card.rep + 1;
+  const interval = nextInterval(item.mes, newRep);
+  s.cards[itemId] = {rep: newRep, nextReview: addDays(todayStr(), interval), lastReview: todayStr()};
+  s.doneToday = [...done, itemId];
+  s.doneTodayDate = todayStr();
+  persist(getKey(mat), s);
+  showToast(`Próxima revisão em ${interval} dia${interval > 1 ? "s" : ""}.`);
+  renderMateria(mat);
+
+  // Auto-sync se GitHub configurado
+  const cfg = getGHConfig();
+  if (cfg.token) {
+    const payload = getAllProgress();
+    payload._sha = localStorage.getItem("cacd_progress_sha");
+    const ok = await saveToGithub(payload);
+    if (ok) {
+      const now = new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+      lastSyncTime = now;
+      localStorage.setItem("cacd_last_sync", now);
+    }
+  }
+}
+
+function saveConfig(mat) {
+  const url = document.getElementById(`${mat}-gdocs-url`).value.trim();
+  localStorage.setItem(`cacd_url_${mat}`, url);
+  showToast("URL salva.");
+  renderMateria(mat);
+}
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2800);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+async function boot() {
+  initAll();
+  renderHome();
+  // Tenta carregar do GitHub silenciosamente no início
+  const cfg = getGHConfig();
+  if (cfg.token) {
+    updateSyncStatus("Carregando...");
+    const remote = await loadFromGithub();
+    if (remote) {
+      applyProgress(remote);
+      initAll();
+      const now = new Date().toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+      lastSyncTime = now;
+      localStorage.setItem("cacd_last_sync", now);
+      renderHome();
+    }
+  }
+}
+
+boot();
+</script>
+</body>
+</html>
