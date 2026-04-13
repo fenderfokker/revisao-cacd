@@ -97,9 +97,9 @@
         "lastReview": null
       },
       "20": {
-        "rep": 0,
-        "nextReview": "2026-04-13",
-        "lastReview": null
+        "rep": 1,
+        "nextReview": "2026-04-15",
+        "lastReview": "2026-04-13"
       },
       "21": {
         "rep": 0,
@@ -112,7 +112,9 @@
         "lastReview": null
       }
     },
-    "doneToday": [],
+    "doneToday": [
+      20
+    ],
     "doneTodayDate": "2026-04-13"
   },
   "hm": {
@@ -206,6 +208,6 @@
     "doneToday": [],
     "doneTodayDate": "2026-04-13"
   },
-  "brUrl": "",
+  "brUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0#bookmark=id.ns8e7gpdov60",
   "hmUrl": ""
 }
