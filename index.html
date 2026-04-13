@@ -67,7 +67,7 @@ header.mat-header{padding:0 0 24px;border-bottom:1px solid var(--border);margin-
 .card-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;letter-spacing:1px;}
 .pill-now{background:rgba(201,168,76,0.12);color:var(--accent);}
 .pill-done{background:rgba(74,158,107,0.10);color:var(--green);}
-.pill-late{background:rgba(184,85,85,0.10);color:var(--red);}
+.pill-early{background:rgba(74,127,165,0.12);color:var(--blue);}
 .card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;line-height:1.15;margin-bottom:8px;}
 .card-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
 .tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;letter-spacing:1px;}
@@ -633,7 +633,7 @@ function renderMateria(mat) {
   // Info bar — progresso do dia
   const infoBar = document.getElementById(`${mat}-info-bar`);
   if (done.length >= 2) {
-    infoBar.textContent = `✓ ${done.length} revisão(ões) feita(s) hoje — mínimo diário atingido`;
+    infoBar.textContent = `✓ ${done.length} revisão(ões) feita(s) hoje — mínimo desta matéria atingido`;
     infoBar.classList.add('show');
   } else {
     infoBar.classList.remove('show');
@@ -666,6 +666,18 @@ function renderMateria(mat) {
       const status = s.cards[item.id].nextReview < today ? "late" : "now";
       container.appendChild(buildCard(item, status, url, mat));
     });
+
+    // Itens futuros disponíveis para revisão antecipada
+    const futuros = items
+      .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
+      .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
+    if (futuros.length > 0) {
+      const sep = document.createElement("div");
+      sep.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:16px 0 10px;";
+      sep.innerHTML = `Revisão antecipada <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+      container.appendChild(sep);
+      futuros.forEach(item => container.appendChild(buildCard(item, "early", url, mat)));
+    }
   }
 
   document.getElementById(`${mat}-gdocs-url`).value = url;
@@ -682,9 +694,10 @@ function buildCard(item, status, url, mat) {
   const link = buildLink(item.bm, url);
   const interval = nextInterval(item.mes, card.rep);
   const pillMap = {
-    done: ["pill-done","✓ Revisado hoje"],
-    now:  ["pill-now", "Revisar hoje"],
-    late: ["pill-late","Atrasado"],
+    done:  ["pill-done","✓ Revisado hoje"],
+    now:   ["pill-now", "Revisar hoje"],
+    late:  ["pill-late","Atrasado"],
+    early: ["pill-early","Revisão antecipada"],
   };
   const [pillCls, pillTxt] = pillMap[status];
   let docsBtn;
@@ -745,16 +758,33 @@ async function marcarRevisado(mat, itemId) {
   itemId = Number(itemId);
   const done = (s.doneToday || []).map(Number);
   if (done.includes(itemId)) return;
-  if (done.length === 2) showToast("Mínimo diário atingido — pode continuar se quiser.");
+
   const item = getItems(mat).find(i => i.id === itemId);
   const card = s.cards[itemId];
+  const today = todayStr();
   const newRep = card.rep + 1;
   const interval = nextInterval(item.mes, newRep);
-  s.cards[itemId] = {rep: newRep, nextReview: addDays(todayStr(), interval), lastReview: todayStr()};
+
+  // Calcular nova nextReview a partir de hoje (data real da revisão)
+  const newNextReview = addDays(today, interval);
+  s.cards[itemId] = {rep: newRep, nextReview: newNextReview, lastReview: today};
+
+  // Se revisado antes da data prevista, recalcular todos os itens futuros
+  // que dependem de uma sequência relativa (itens ainda não revisados hoje)
+  // A regra é simples: não há dependência entre itens, cada um tem seu próprio
+  // nextReview independente — então o recálculo já está correto por si só.
+
   s.doneToday = [...done, itemId];
-  s.doneTodayDate = todayStr();
+  s.doneTodayDate = today;
   persist(getKey(mat), s);
-  showToast(`Próxima revisão em ${interval} dia${interval > 1 ? "s" : ""}.`);
+
+  // Toast informativo
+  if (done.length + 1 === 2) {
+    showToast(`Mínimo desta matéria atingido · próxima em ${interval}d`);
+  } else {
+    showToast(`Próxima revisão em ${interval} dia${interval > 1 ? "s" : ""}.`);
+  }
+
   renderMateria(mat);
 
   // Auto-sync se GitHub configurado
