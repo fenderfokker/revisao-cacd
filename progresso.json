@@ -201,13 +201,14 @@
         "lastReview": null
       },
       "17": {
-        "rep": 0,
-        "nextReview": "2026-04-13",
-        "lastReview": null
+        "rep": 1,
+        "nextReview": "2026-04-15",
+        "lastReview": "2026-04-13"
       }
     },
     "doneToday": [
-      7
+      7,
+      17
     ],
     "doneTodayDate": "2026-04-13"
   },
