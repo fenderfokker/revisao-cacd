@@ -489,7 +489,7 @@ async function syncNow() {
       // Merge: usar o mais recente por doneTodayDate e lastReview
       const localBR = JSON.parse(localStorage.getItem(KEY_BR) || "null");
       const localHM = JSON.parse(localStorage.getItem(KEY_HM) || "null");
-      
+
       // Se remoto é mais recente, aplica
       if (remote.br && (!localBR || remote.br.doneTodayDate >= (localBR.doneTodayDate||""))) {
         localStorage.setItem(KEY_BR, JSON.stringify(remote.br));
@@ -654,7 +654,7 @@ function renderMateria(mat) {
 
   if (pendentes.length === 0 && feitosHoje.length === 0) {
     const next = items
-      .filter(i => s.cards[i.id].nextReview > today)
+      .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
       .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview))[0];
     const nextTxt = next
       ? `Próxima: ${next.tema} · ${fmtDate(s.cards[next.id].nextReview)}`
@@ -666,18 +666,18 @@ function renderMateria(mat) {
       const status = s.cards[item.id].nextReview < today ? "late" : "now";
       container.appendChild(buildCard(item, status, url, mat));
     });
+  }
 
-    // Itens futuros disponíveis para revisão antecipada
-    const futuros = items
-      .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
-      .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
-    if (futuros.length > 0) {
-      const sep = document.createElement("div");
-      sep.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:16px 0 10px;";
-      sep.innerHTML = `Revisão antecipada <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
-      container.appendChild(sep);
-      futuros.forEach(item => container.appendChild(buildCard(item, "early", url, mat)));
-    }
+  // Itens futuros — sempre visíveis para revisão antecipada
+  const futuros = items
+    .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
+    .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
+  if (futuros.length > 0) {
+    const sep = document.createElement("div");
+    sep.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:16px 0 10px;";
+    sep.innerHTML = `Revisão antecipada <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+    container.appendChild(sep);
+    futuros.forEach(item => container.appendChild(buildCard(item, "early", url, mat)));
   }
 
   document.getElementById(`${mat}-gdocs-url`).value = url;
