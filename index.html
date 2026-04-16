@@ -652,32 +652,54 @@ function renderMateria(mat) {
   const container = document.getElementById(`${mat}-today-list`);
   container.innerHTML = "";
 
-  if (pendentes.length === 0 && feitosHoje.length === 0) {
-    const next = items
-      .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
-      .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview))[0];
-    const nextTxt = next
-      ? `Próxima: ${next.tema} · ${fmtDate(s.cards[next.id].nextReview)}`
-      : "Sem revisões futuras agendadas.";
-    container.innerHTML = `<div class="empty"><div class="empty-icon">✓</div><div class="empty-title">Nenhuma revisão pendente hoje</div><div class="empty-sub">${nextTxt}</div></div>`;
-  } else {
-    feitosHoje.forEach(item => container.appendChild(buildCard(item, "done", url, mat)));
+  // ── SEÇÃO 1: MÍNIMO DO DIA ──
+  const secMin = document.createElement("div");
+  secMin.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:10px;";
+  secMin.innerHTML = `Mínimo do dia (2) <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+  container.appendChild(secMin);
+
+  // Itens já feitos hoje
+  feitosHoje.forEach(item => container.appendChild(buildCard(item, "done", url, mat)));
+
+  // Itens pendentes do dia (vencidos)
+  if (pendentes.length > 0) {
     pendentes.forEach(item => {
       const status = s.cards[item.id].nextReview < today ? "late" : "now";
       container.appendChild(buildCard(item, status, url, mat));
     });
+  } else if (feitosHoje.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.innerHTML = `<div class="empty-icon">✓</div><div class="empty-title">Mínimo do dia concluído</div>`;
+    container.appendChild(empty);
   }
 
-  // Itens futuros — sempre visíveis para revisão antecipada
+  // Botão desfazer — aparece se houver revisões feitas hoje
+  if (feitosHoje.length > 0) {
+    const undoBtn = document.createElement("button");
+    undoBtn.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);background:transparent;border:1px solid var(--border);padding:6px 12px;cursor:pointer;letter-spacing:1px;margin-bottom:16px;width:100%;";
+    undoBtn.textContent = "↩ Desfazer todas as revisões de hoje";
+    undoBtn.onclick = () => desfazerHoje(mat);
+    container.appendChild(undoBtn);
+  }
+
+  // ── SEÇÃO 2: REVISÃO ANTECIPADA ──
   const futuros = items
     .filter(i => s.cards[i.id].nextReview > today && !done.includes(i.id))
     .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
+
+  const secAnti = document.createElement("div");
+  secAnti.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:24px 0 10px;";
+  secAnti.innerHTML = `Revisão antecipada <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+  container.appendChild(secAnti);
+
   if (futuros.length > 0) {
-    const sep = document.createElement("div");
-    sep.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin:16px 0 10px;";
-    sep.innerHTML = `Revisão antecipada <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
-    container.appendChild(sep);
     futuros.forEach(item => container.appendChild(buildCard(item, "early", url, mat)));
+  } else {
+    const empty2 = document.createElement("div");
+    empty2.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:20px;";
+    empty2.textContent = "Todos os itens já foram revisados.";
+    container.appendChild(empty2);
   }
 
   document.getElementById(`${mat}-gdocs-url`).value = url;
@@ -799,6 +821,34 @@ async function marcarRevisado(mat, itemId) {
       localStorage.setItem("cacd_last_sync", now);
     }
   }
+}
+
+function desfazerHoje(mat) {
+  const s = getState(mat);
+  const done = (s.doneToday || []).map(Number);
+  if (done.length === 0) return;
+
+  // Reverter cada card revisado hoje: decrementar rep e recalcular nextReview
+  done.forEach(itemId => {
+    const item = getItems(mat).find(i => i.id === itemId);
+    const card = s.cards[itemId];
+    if (!card) return;
+    const prevRep = Math.max(0, card.rep - 1);
+    const prevInterval = nextInterval(item.mes, prevRep);
+    // nextReview volta ao que seria antes: lastReview anterior não temos,
+    // então usamos hoje + intervalo anterior como estimativa conservadora
+    s.cards[itemId] = {
+      rep: prevRep,
+      nextReview: todayStr(), // volta para hoje para aparecer novamente
+      lastReview: null,
+    };
+  });
+
+  s.doneToday = [];
+  s.doneTodayDate = todayStr();
+  persist(getKey(mat), s);
+  showToast("Revisões de hoje desfeitas.");
+  renderMateria(mat);
 }
 
 function saveConfig(mat) {
