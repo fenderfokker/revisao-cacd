@@ -727,7 +727,7 @@ function buildCard(item, status, url, mat) {
   const [pillCls, pillTxt] = pillMap[status];
   let docsBtn;
   if (link) {
-    docsBtn = `<a class="btn-docs" href="${link}" target="_blank">↗ Abrir no Google Docs</a>`;
+    docsBtn = `<a class="btn-docs" href="${link}" target="_self">↗ Abrir no Google Docs</a>`;
   } else if (item.bm) {
     docsBtn = `<span class="btn-docs off">↗ Configure a URL acima</span>`;
   } else {
