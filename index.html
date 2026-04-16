@@ -150,7 +150,10 @@ footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM P
   </div>
   <div class="sync-bar">
     <div class="sync-info">Sincronização: <span id="sync-status">—</span></div>
-    <button class="btn-sync" id="btn-sync-now" onclick="syncNow()">↻ Sincronizar</button>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-sync" style="color:var(--muted);border-color:var(--border);background:transparent;" onclick="openConfig()">⚙ Config</button>
+      <button class="btn-sync" id="btn-sync-now" onclick="syncNow()">↻ Sincronizar</button>
+    </div>
   </div>
 </div>
 
