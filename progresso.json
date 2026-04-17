@@ -148,9 +148,9 @@
         "lastReview": null
       },
       "7": {
-        "rep": 1,
-        "nextReview": "2026-04-17",
-        "lastReview": "2026-04-13"
+        "rep": 2,
+        "nextReview": "2026-04-24",
+        "lastReview": "2026-04-17"
       },
       "8": {
         "rep": 0,
@@ -203,7 +203,9 @@
         "lastReview": "2026-04-13"
       }
     },
-    "doneToday": [],
+    "doneToday": [
+      7
+    ],
     "doneTodayDate": "2026-04-17"
   },
   "brUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0#bookmark=id.ns8e7gpdov60",
