@@ -115,12 +115,18 @@
         "rep": 1,
         "nextReview": "2026-04-23",
         "lastReview": "2026-04-21"
+      },
+      "24": {
+        "rep": 1,
+        "nextReview": "2026-04-23",
+        "lastReview": "2026-04-21"
       }
     },
     "doneToday": [
       14,
       15,
-      23
+      23,
+      24
     ],
     "doneTodayDate": "2026-04-21"
   },
@@ -224,6 +230,12 @@
       "tema": "CICLO 13 II",
       "mes": "ABRIL",
       "dataCriacao": "2026-04-16"
+    },
+    {
+      "id": 24,
+      "tema": "CICLO 14 I",
+      "mes": "ABRIL",
+      "dataCriacao": "2026-04-17"
     }
   ],
   "hmItems": []
