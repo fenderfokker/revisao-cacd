@@ -67,9 +67,9 @@
         "lastReview": "2026-04-20"
       },
       "14": {
-        "rep": 1,
-        "nextReview": "2026-04-20",
-        "lastReview": "2026-04-16"
+        "rep": 2,
+        "nextReview": "2026-04-28",
+        "lastReview": "2026-04-21"
       },
       "15": {
         "rep": 1,
@@ -113,10 +113,9 @@
       }
     },
     "doneToday": [
-      22,
-      13
+      14
     ],
-    "doneTodayDate": "2026-04-20"
+    "doneTodayDate": "2026-04-21"
   },
   "hm": {
     "cards": {
@@ -206,12 +205,8 @@
         "lastReview": "2026-04-13"
       }
     },
-    "doneToday": [
-      11,
-      12,
-      13
-    ],
-    "doneTodayDate": "2026-04-20"
+    "doneToday": [],
+    "doneTodayDate": "2026-04-21"
   },
   "brUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0#bookmark=id.ns8e7gpdov60",
   "hmUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0"
