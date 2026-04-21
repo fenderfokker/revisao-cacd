@@ -110,11 +110,17 @@
         "rep": 2,
         "nextReview": "2026-04-24",
         "lastReview": "2026-04-20"
+      },
+      "23": {
+        "rep": 1,
+        "nextReview": "2026-04-23",
+        "lastReview": "2026-04-21"
       }
     },
     "doneToday": [
       14,
-      15
+      15,
+      23
     ],
     "doneTodayDate": "2026-04-21"
   },
@@ -212,6 +218,13 @@
     ],
     "doneTodayDate": "2026-04-21"
   },
-  "brUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0#bookmark=id.ns8e7gpdov60",
-  "hmUrl": "https://docs.google.com/document/d/10mmW-Xyfx6UvIxBAcHz9sYlorwCs2dTo6aKsCY5e23s/edit?tab=t.0"
+  "brItems": [
+    {
+      "id": 23,
+      "tema": "CICLO 13 II",
+      "mes": "ABRIL",
+      "dataCriacao": "2026-04-16"
+    }
+  ],
+  "hmItems": []
 }
