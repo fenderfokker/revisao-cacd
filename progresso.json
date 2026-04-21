@@ -216,11 +216,17 @@
         "rep": 2,
         "nextReview": "2026-04-25",
         "lastReview": "2026-04-21"
+      },
+      "18": {
+        "rep": 1,
+        "nextReview": "2026-04-23",
+        "lastReview": "2026-04-21"
       }
     },
     "doneToday": [
       14,
-      17
+      17,
+      18
     ],
     "doneTodayDate": "2026-04-21"
   },
@@ -238,5 +244,12 @@
       "dataCriacao": "2026-04-17"
     }
   ],
-  "hmItems": []
+  "hmItems": [
+    {
+      "id": 18,
+      "tema": "CICLO 11 II",
+      "mes": "ABRIL",
+      "dataCriacao": "2026-04-17"
+    }
+  ]
 }
