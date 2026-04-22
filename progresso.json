@@ -225,11 +225,17 @@
         "rep": 1,
         "nextReview": "2026-04-23",
         "lastReview": "2026-04-21"
+      },
+      "19": {
+        "rep": 1,
+        "nextReview": "2026-04-24",
+        "lastReview": "2026-04-22"
       }
     },
     "doneToday": [
       3,
-      4
+      4,
+      19
     ],
     "doneTodayDate": "2026-04-22"
   },
@@ -259,6 +265,12 @@
       "tema": "CICLO 11 II",
       "mes": "ABRIL",
       "dataCriacao": "2026-04-17"
+    },
+    {
+      "id": 19,
+      "tema": "CICLO 12 I",
+      "mes": "ABRIL",
+      "dataCriacao": "2026-04-22"
     }
   ]
 }
