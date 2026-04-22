@@ -77,9 +77,9 @@
         "lastReview": "2026-04-21"
       },
       "16": {
-        "rep": 1,
-        "nextReview": "2026-04-20",
-        "lastReview": "2026-04-16"
+        "rep": 2,
+        "nextReview": "2026-04-29",
+        "lastReview": "2026-04-22"
       },
       "17": {
         "rep": 1,
@@ -122,7 +122,9 @@
         "lastReview": "2026-04-21"
       }
     },
-    "doneToday": [],
+    "doneToday": [
+      16
+    ],
     "doneTodayDate": "2026-04-22"
   },
   "hm": {
