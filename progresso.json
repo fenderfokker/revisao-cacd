@@ -152,9 +152,9 @@
         "lastReview": "2026-04-22"
       },
       "4": {
-        "rep": 0,
-        "nextReview": "2026-04-16",
-        "lastReview": null
+        "rep": 1,
+        "nextReview": "2026-04-29",
+        "lastReview": "2026-04-22"
       },
       "5": {
         "rep": 0,
@@ -228,7 +228,8 @@
       }
     },
     "doneToday": [
-      3
+      3,
+      4
     ],
     "doneTodayDate": "2026-04-22"
   },
