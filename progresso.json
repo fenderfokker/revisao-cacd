@@ -32,9 +32,9 @@
         "lastReview": "2026-04-23"
       },
       "7": {
-        "rep": 1,
-        "nextReview": "2026-04-23",
-        "lastReview": "2026-04-16"
+        "rep": 2,
+        "nextReview": "2026-05-07",
+        "lastReview": "2026-04-23"
       },
       "8": {
         "rep": 1,
@@ -130,7 +130,8 @@
     "doneToday": [
       18,
       19,
-      6
+      6,
+      7
     ],
     "doneTodayDate": "2026-04-23"
   },
