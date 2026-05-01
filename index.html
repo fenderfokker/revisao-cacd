@@ -107,7 +107,19 @@ header.mat-header{padding:0 0 24px;border-bottom:1px solid var(--border);margin-
 select.cfg-input{cursor:pointer;}
 .btn-save{background:rgba(201,168,76,0.10);border:1px solid rgba(201,168,76,0.25);color:var(--accent);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;margin-top:8px;transition:all 0.15s;width:100%;}
 .btn-save:hover{background:rgba(201,168,76,0.20);}
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--border);padding:24px;max-width:400px;width:100%;}
+.modal h3{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal p{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:16px;}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 11px;font-family:'IBM Plex Mono',monospace;font-size:13px;outline:none;margin-bottom:6px;}
+.modal-input:focus{border-color:var(--accent);}
+.modal-hint{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:16px;}
+.modal-btns{display:flex;gap:8px;}
+.modal-btns .btn-save{margin-top:0;flex:1;}
+.btn-cancel{flex:1;background:transparent;border:1px solid var(--border);color:var(--muted);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+.btn-cancel:hover{color:var(--text);}
+.btn-reset{flex:1;background:transparent;border:1px solid rgba(184,85,85,0.3);color:var(--red);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;}
+.btn-reset:hover{background:rgba(184,85,85,0.08);}bottom:20px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:11px;opacity:0;transition:all 0.25s;pointer-events:none;z-index:999;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);display:flex;justify-content:space-between;letter-spacing:1px;margin-top:8px;}
 </style>
@@ -250,6 +262,19 @@ footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM P
 
 </div>
 <div class="toast" id="toast"></div>
+<div class="modal-overlay hidden" id="modal-overlay">
+  <div class="modal">
+    <h3 id="modal-title">Editar Intervalos</h3>
+    <p>SEQUÊNCIA DE REVISÃO PERSONALIZADA</p>
+    <input class="modal-input" id="modal-input" type="text" placeholder="Ex: 3, 7, 15, 30, 60"/>
+    <div class="modal-hint">Dias entre cada revisão, separados por vírgula. Ex: 3, 7, 15, 30 significa revisar em 3 dias, depois 7, depois 15, depois 30.</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-reset" onclick="resetIntervals()">Padrão</button>
+      <button class="btn-save" onclick="saveIntervals()">Salvar</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ── DADOS FIXOS ─────────────────────────────────────────────────────────────
@@ -312,7 +337,10 @@ const INTERVALS_BY_MES = {
   NOVEMBRO:  [1, 2,  4,  7,  14, 21],
   DEZEMBRO:  [1, 2,  4,  7,  14, 21],
 };
-function nextInterval(mes, rep) {
+function nextInterval(mes, rep, customIntervals) {
+  if (customIntervals && customIntervals.length > 0) {
+    return customIntervals[Math.min(rep, customIntervals.length - 1)];
+  }
   const seq = INTERVALS_BY_MES[mes] || INTERVALS_BY_MES["ABRIL"];
   return seq[Math.min(rep, seq.length - 1)];
 }
@@ -572,9 +600,12 @@ function renderMateria(mat) {
     .filter(i => s.cards[i.id] && s.cards[i.id].nextReview <= today)
     .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
 
-  const pendentes  = due.filter(i => !done.includes(i.id));
-  const feitosHoje = due.filter(i =>  done.includes(i.id));
-  const overdue    = pendentes.filter(i => s.cards[i.id].nextReview < today).length;
+  // Limite de 2 por dia: mostrar só os 2 mais antigos como pendentes
+  const todosVencidos = due.filter(i => !done.includes(i.id));
+  const pendentes = todosVencidos.slice(0, Math.max(0, 2 - done.length));
+  const naFila = todosVencidos.slice(Math.max(0, 2 - done.length));
+  const feitosHoje = due.filter(i => done.includes(i.id));
+  const overdue = todosVencidos.length;
 
   document.getElementById(`${mat}-s-hoje`).textContent  = pendentes.length;
   document.getElementById(`${mat}-s-atr`).textContent   = overdue;
@@ -589,7 +620,8 @@ function renderMateria(mat) {
 
   const debtBar = document.getElementById(`${mat}-debt-bar`);
   if (overdue > 0) {
-    debtBar.textContent = `⚠ ${overdue} atrasada(s) — ~${Math.ceil(overdue/2)} dia(s) para quitar`;
+    const diasFila = Math.ceil(overdue / 2);
+    debtBar.textContent = `⚠ ${overdue} vencida(s) — fila de ${diasFila} dia(s) · mostrando 2 por dia`;
     debtBar.classList.add('show');
   } else { debtBar.classList.remove('show'); }
 
@@ -607,6 +639,12 @@ function renderMateria(mat) {
     empty.className = "empty";
     empty.innerHTML = `<div class="empty-icon">✓</div><div class="empty-title">Sem pendências hoje</div>`;
     container.appendChild(empty);
+  }
+  if (naFila.length > 0) {
+    const msg = document.createElement("div");
+    msg.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:10px;letter-spacing:1px;border:1px solid var(--border);margin-top:4px;";
+    msg.textContent = `+ ${naFila.length} item(s) na fila — aparecerão nos próximos dias (2/dia)`;
+    container.appendChild(msg);
   }
 
   // Botão desfazer
@@ -647,7 +685,7 @@ function renderMateria(mat) {
 function buildCard(item, status, mat) {
   const s = getState(mat);
   const card = s.cards[item.id];
-  const interval = nextInterval(item.mes, card.rep);
+  const interval = nextInterval(item.mes, card.rep, card.customIntervals);
   const pillMap = {
     done:  ["pill-done","✓ Revisado hoje"],
     now:   ["pill-now", "Revisar hoje"],
@@ -658,6 +696,7 @@ function buildCard(item, status, mat) {
   const actionBtn = status === "done"
     ? `<span class="done-badge">✓ Revisado · próxima em ${fmtDate(card.nextReview)}</span>`
     : `<button class="btn-rev" onclick="marcarRevisado('${mat}',${item.id})">Marcar como Revisado ✓</button>`;
+  const intLabel = card.customIntervals ? `✎ ${card.customIntervals.join(", ")}d` : `${interval}d`;
   const el = document.createElement("div");
   el.className = "card";
   el.innerHTML = `
@@ -670,7 +709,7 @@ function buildCard(item, status, mat) {
       <div class="card-title">${item.tema}</div>
       <div class="card-tags">
         <span class="tag tag-mes">${item.mes}</span>
-        <span class="tag tag-int">próx. ${interval}d</span>
+        <span class="tag tag-int" style="cursor:pointer" onclick="editIntervals('${mat}',${item.id})" title="Clique para editar intervalos">${intLabel}</span>
         <span class="tag tag-rep">${card.rep} rev.</span>
       </div>
       <div class="card-foot">${actionBtn}</div>
@@ -686,12 +725,16 @@ function renderTable(mat, today, done) {
     if (!s.cards[item.id]) return;
     const card = s.cards[item.id];
     let cls = "s-futuro", label = fmtDate(card.nextReview);
-    if (done.includes(item.id))         { cls = "s-feito"; label = "✓"; }
+    if (done.includes(item.id))         { cls = "s-feito"; label = `✓ ${fmtDate(card.nextReview)}`; }
     else if (card.nextReview < today)   { cls = "s-atr"; }
     else if (card.nextReview === today) { cls = "s-hoje"; label = "HOJE"; }
+    const hasCustom = card.customIntervals ? " ✎" : "";
     const row = document.createElement("div");
     row.className = "tbl-row";
-    row.innerHTML = `<div class="tc">${item.id}</div><div class="tc name">${item.tema}</div><div class="tc ${cls}">${label}</div><div class="tc">${card.rep}</div>`;
+    row.style.cursor = "pointer";
+    row.title = "Clique para editar intervalos";
+    row.onclick = () => editIntervals(mat, item.id);
+    row.innerHTML = `<div class="tc">${item.id}</div><div class="tc name">${item.tema}${hasCustom}</div><div class="tc ${cls}">${label}</div><div class="tc">${card.rep}</div>`;
     tbl.appendChild(row);
   });
 }
@@ -706,8 +749,8 @@ async function marcarRevisado(mat, itemId) {
   const card = s.cards[itemId];
   const today = todayStr();
   const newRep = card.rep + 1;
-  const interval = nextInterval(item.mes, newRep);
-  s.cards[itemId] = {rep: newRep, nextReview: addDays(today, interval), lastReview: today};
+  const interval = nextInterval(item.mes, newRep, card.customIntervals);
+  s.cards[itemId] = {rep: newRep, nextReview: addDays(today, interval), lastReview: today, customIntervals: card.customIntervals || null};
   s.doneToday = [...done, itemId];
   s.doneTodayDate = today;
   persist(getKey(mat), s);
@@ -776,6 +819,41 @@ function addItem(mat) {
 
   showToast(`"${tema}" adicionado · próx. intervalo: ${nextInterval(mes, 1)}d`);
   renderMateria(mat);
+}
+
+let _editMat = null, _editId = null;
+function editIntervals(mat, itemId) {
+  const s = getState(mat);
+  const item = getItems(mat).find(i => i.id === itemId);
+  const card = s.cards[itemId];
+  _editMat = mat; _editId = itemId;
+  document.getElementById("modal-title").textContent = item.tema;
+  document.getElementById("modal-input").value = card.customIntervals ? card.customIntervals.join(", ") : "";
+  document.getElementById("modal-overlay").classList.remove("hidden");
+  document.getElementById("modal-input").focus();
+}
+function closeModal() {
+  document.getElementById("modal-overlay").classList.add("hidden");
+  _editMat = null; _editId = null;
+}
+function saveIntervals() {
+  const raw = document.getElementById("modal-input").value;
+  const parsed = raw.split(",").map(v => parseInt(v.trim())).filter(v => !isNaN(v) && v > 0);
+  if (parsed.length === 0) { showToast("Informe ao menos um intervalo válido."); return; }
+  const s = getState(_editMat);
+  s.cards[_editId].customIntervals = parsed;
+  persist(getKey(_editMat), s);
+  showToast("Intervalos salvos.");
+  closeModal();
+  renderMateria(_editMat);
+}
+function resetIntervals() {
+  const s = getState(_editMat);
+  s.cards[_editId].customIntervals = null;
+  persist(getKey(_editMat), s);
+  showToast("Intervalos revertidos ao padrão.");
+  closeModal();
+  renderMateria(_editMat);
 }
 
 function showToast(msg) {
