@@ -186,7 +186,7 @@ footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM P
     <div class="stat"><div class="stat-l">Feitas Hoje</div><div class="stat-v c-grn" id="br-s-feito">—</div></div>
     <div class="stat"><div class="stat-l">Total</div><div class="stat-v c-pur" id="br-s-total">—</div></div>
   </div>
-  <div class="sec-label">Mínimo do Dia (2)</div>
+  
   <div class="info-bar green" id="br-info-bar"></div>
   <div class="info-bar red"   id="br-debt-bar"></div>
   <div id="br-today-list" class="today-list"></div>
@@ -221,7 +221,7 @@ footer{border-top:1px solid var(--border);padding:16px 0 24px;font-family:'IBM P
     <div class="stat"><div class="stat-l">Feitas Hoje</div><div class="stat-v c-grn" id="hm-s-feito">—</div></div>
     <div class="stat"><div class="stat-l">Total</div><div class="stat-v c-pur" id="hm-s-total">—</div></div>
   </div>
-  <div class="sec-label">Mínimo do Dia (2)</div>
+  
   <div class="info-bar green" id="hm-info-bar"></div>
   <div class="info-bar red"   id="hm-debt-bar"></div>
   <div id="hm-today-list" class="today-list"></div>
@@ -600,15 +600,19 @@ function renderMateria(mat) {
     .filter(i => s.cards[i.id] && s.cards[i.id].nextReview <= today)
     .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
 
-  // Limite de 2 por dia: mostrar só os 2 mais antigos como pendentes
+  // Separar: vencidas hoje (nextReview === today) vs atrasadas (nextReview < today)
   const todosVencidos = due.filter(i => !done.includes(i.id));
-  const pendentes = todosVencidos.slice(0, Math.max(0, 2 - done.length));
-  const naFila = todosVencidos.slice(Math.max(0, 2 - done.length));
+  const deHoje   = todosVencidos.filter(i => s.cards[i.id].nextReview === today);
+  const atrasadas = todosVencidos.filter(i => s.cards[i.id].nextReview < today);
   const feitosHoje = due.filter(i => done.includes(i.id));
-  const overdue = todosVencidos.length;
 
-  document.getElementById(`${mat}-s-hoje`).textContent  = pendentes.length;
-  document.getElementById(`${mat}-s-atr`).textContent   = overdue;
+  // Limite de 2 no mínimo do dia: apenas itens de hoje (não atrasados)
+  const slots = Math.max(0, 2 - done.length);
+  const pendentesHoje = deHoje.slice(0, slots);
+  const naFilaHoje = deHoje.slice(slots);
+
+  document.getElementById(`${mat}-s-hoje`).textContent  = deHoje.length;
+  document.getElementById(`${mat}-s-atr`).textContent   = atrasadas.length;
   document.getElementById(`${mat}-s-feito`).textContent = done.length;
   document.getElementById(`${mat}-s-total`).textContent = items.length;
 
@@ -619,31 +623,30 @@ function renderMateria(mat) {
   } else { infoBar.classList.remove('show'); }
 
   const debtBar = document.getElementById(`${mat}-debt-bar`);
-  if (overdue > 0) {
-    const diasFila = Math.ceil(overdue / 2);
-    debtBar.textContent = `⚠ ${overdue} vencida(s) — fila de ${diasFila} dia(s) · mostrando 2 por dia`;
-    debtBar.classList.add('show');
-  } else { debtBar.classList.remove('show'); }
+  debtBar.classList.remove('show');
 
   const container = document.getElementById(`${mat}-today-list`);
   container.innerHTML = "";
 
-  // ── Seção: Mínimo do dia ──
+  // ── Seção 1: Revisar Hoje ──
+  const secHoje = document.createElement("div");
+  secHoje.className = "sec-label";
+  secHoje.innerHTML = `Revisar Hoje <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+  container.appendChild(secHoje);
+
   feitosHoje.forEach(item => container.appendChild(buildCard(item, "done", mat)));
-  pendentes.forEach(item => {
-    const status = s.cards[item.id].nextReview < today ? "late" : "now";
-    container.appendChild(buildCard(item, status, mat));
-  });
-  if (feitosHoje.length === 0 && pendentes.length === 0) {
+  pendentesHoje.forEach(item => container.appendChild(buildCard(item, "now", mat)));
+
+  if (feitosHoje.length === 0 && deHoje.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty";
-    empty.innerHTML = `<div class="empty-icon">✓</div><div class="empty-title">Sem pendências hoje</div>`;
+    empty.innerHTML = `<div class="empty-icon">✓</div><div class="empty-title">Nenhuma revisão programada para hoje</div>`;
     container.appendChild(empty);
   }
-  if (naFila.length > 0) {
+  if (naFilaHoje.length > 0) {
     const msg = document.createElement("div");
     msg.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:10px;letter-spacing:1px;border:1px solid var(--border);margin-top:4px;";
-    msg.textContent = `+ ${naFila.length} item(s) na fila — aparecerão nos próximos dias (2/dia)`;
+    msg.textContent = `+ ${naFilaHoje.length} item(s) de hoje na fila — aparecerão amanhã`;
     container.appendChild(msg);
   }
 
@@ -656,7 +659,27 @@ function renderMateria(mat) {
     container.appendChild(btn);
   }
 
-  // ── Seção: Revisão antecipada ──
+  // ── Seção 2: Revisões Atrasadas ──
+  const secAtr = document.createElement("div");
+  secAtr.className = "sec-label";
+  secAtr.style.marginTop = "24px";
+  secAtr.innerHTML = `Revisões Atrasadas${atrasadas.length > 0 ? ` (${atrasadas.length})` : ''} <span style="flex:1;height:1px;background:var(--border);display:block"></span>`;
+  container.appendChild(secAtr);
+
+  if (atrasadas.length > 0) {
+    const atrWarn = document.createElement("div");
+    atrWarn.style.cssText = "background:rgba(184,85,85,0.06);border:1px solid rgba(184,85,85,0.2);color:var(--red);font-family:'IBM Plex Mono',monospace;font-size:10px;padding:10px 14px;letter-spacing:1px;margin-bottom:10px;";
+    atrWarn.textContent = `⚠ ${atrasadas.length} atrasada(s) — ~${Math.ceil(atrasadas.length / 2)} dia(s) para quitar`;
+    container.appendChild(atrWarn);
+    atrasadas.forEach(item => container.appendChild(buildCard(item, "late", mat)));
+  } else {
+    const ok = document.createElement("div");
+    ok.style.cssText = "font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);text-align:center;padding:16px;";
+    ok.textContent = "Sem revisões atrasadas.";
+    container.appendChild(ok);
+  }
+
+  // ── Seção 3: Revisão Antecipada ──
   const futuros = items
     .filter(i => s.cards[i.id] && s.cards[i.id].nextReview > today && !done.includes(i.id))
     .sort((a,b) => s.cards[a.id].nextReview.localeCompare(s.cards[b.id].nextReview));
