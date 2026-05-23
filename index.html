@@ -356,6 +356,22 @@ function fmtDate(str) {
   if (!str) return "—";
   return new Date(str + "T12:00:00").toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
 }
+function mergeItemLists(local, remote) {
+  const map = {};
+  remote.forEach(item => { map[item.id] = item; });
+  local.forEach(item => { if (!map[item.id]) map[item.id] = item; });
+  return Object.values(map).sort((a, b) => a.id - b.id);
+}
+function mergeCards(localCards, remoteCards) {
+  Object.keys(localCards || {}).forEach(id => {
+    if (!localCards[id]) return;
+    if (!remoteCards[id]) {
+      remoteCards[id] = localCards[id];
+    } else if (localCards[id].customIntervals && !remoteCards[id].customIntervals) {
+      remoteCards[id].customIntervals = localCards[id].customIntervals;
+    }
+  });
+}
 
 // ── GITHUB ──────────────────────────────────────────────────────────────────
 const GH_KEY = "cacd_github_cfg";
@@ -497,30 +513,20 @@ async function syncNow() {
       const localHM = JSON.parse(localStorage.getItem(KEY_HM) || "null");
       if (remote.br) {
         if (!localBR || remote.br.doneTodayDate >= (localBR.doneTodayDate||"")) {
-          if (localBR) {
-            Object.keys(localBR.cards || {}).forEach(id => {
-              if (localBR.cards[id] && localBR.cards[id].customIntervals && remote.br.cards[id]) {
-                remote.br.cards[id].customIntervals = localBR.cards[id].customIntervals;
-              }
-            });
-          }
+          if (localBR) mergeCards(localBR.cards, remote.br.cards);
           localStorage.setItem(KEY_BR, JSON.stringify(remote.br));
         }
       }
       if (remote.hm) {
         if (!localHM || remote.hm.doneTodayDate >= (localHM.doneTodayDate||"")) {
-          if (localHM) {
-            Object.keys(localHM.cards || {}).forEach(id => {
-              if (localHM.cards[id] && localHM.cards[id].customIntervals && remote.hm.cards[id]) {
-                remote.hm.cards[id].customIntervals = localHM.cards[id].customIntervals;
-              }
-            });
-          }
+          if (localHM) mergeCards(localHM.cards, remote.hm.cards);
           localStorage.setItem(KEY_HM, JSON.stringify(remote.hm));
         }
       }
-      if (remote.brItems) localStorage.setItem("cacd_items_br", JSON.stringify(remote.brItems));
-      if (remote.hmItems) localStorage.setItem("cacd_items_hm", JSON.stringify(remote.hmItems));
+      const localBrItems = JSON.parse(localStorage.getItem("cacd_items_br") || "[]");
+      const localHmItems = JSON.parse(localStorage.getItem("cacd_items_hm") || "[]");
+      localStorage.setItem("cacd_items_br", JSON.stringify(mergeItemLists(localBrItems, remote.brItems || [])));
+      localStorage.setItem("cacd_items_hm", JSON.stringify(mergeItemLists(localHmItems, remote.hmItems || [])));
       if (remote._sha) localStorage.setItem("cacd_progress_sha", remote._sha);
     }
     const ok = await saveToGithub(getAllProgress());
@@ -862,6 +868,8 @@ function addItem(mat) {
 
   showToast(`"${tema}" adicionado · próx. intervalo: ${nextInterval(mes, 1)}d`);
   renderMateria(mat);
+  const cfgAdd = getGHConfig();
+  if (cfgAdd.token) saveToGithub(getAllProgress());
 }
 
 let _editMat = null, _editId = null;
@@ -923,20 +931,16 @@ async function boot() {
       // Preservar customIntervals locais antes de sobrescrever com dados remotos
       const localBR = JSON.parse(localStorage.getItem(KEY_BR) || "null");
       const localHM = JSON.parse(localStorage.getItem(KEY_HM) || "null");
-      if (remote.br && localBR) {
-        Object.keys(localBR.cards || {}).forEach(id => {
-          if (localBR.cards[id] && localBR.cards[id].customIntervals && remote.br.cards && remote.br.cards[id]) {
-            remote.br.cards[id].customIntervals = localBR.cards[id].customIntervals;
-          }
-        });
-      }
-      if (remote.hm && localHM) {
-        Object.keys(localHM.cards || {}).forEach(id => {
-          if (localHM.cards[id] && localHM.cards[id].customIntervals && remote.hm.cards && remote.hm.cards[id]) {
-            remote.hm.cards[id].customIntervals = localHM.cards[id].customIntervals;
-          }
-        });
-      }
+      if (remote.br && localBR) mergeCards(localBR.cards, remote.br.cards || {});
+      if (remote.hm && localHM) mergeCards(localHM.cards, remote.hm.cards || {});
+      remote.brItems = mergeItemLists(
+        JSON.parse(localStorage.getItem("cacd_items_br") || "[]"),
+        remote.brItems || []
+      );
+      remote.hmItems = mergeItemLists(
+        JSON.parse(localStorage.getItem("cacd_items_hm") || "[]"),
+        remote.hmItems || []
+      );
       applyProgress(remote);
       initAll();
       const now = new Date().toLocaleTimeString("pt-BR", {hour:"2-digit",minute:"2-digit"});
